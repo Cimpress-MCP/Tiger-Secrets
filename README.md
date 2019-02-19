@@ -30,7 +30,7 @@ There are a few ways to allow an application access to secret configuration valu
 
 [CloudFormation dynamic references]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dynamic-references.html
 
-## How to Use It
+## How To Use It
 
 In short, setup has two parts. One performed in the application (or, better, in CloudFormation), and one performed in Secrets Manager (which may _also_ be performed in CloudFormation).
 
@@ -45,7 +45,7 @@ In Secrets Manager, the values associated with these identifiers must contain va
 
 For further details, please consult [the wiki][]. (But don't forget to grant your application the IAM permissions to read these secret values!)
 
-[the wiki]: about:blank
+[the wiki]: https://github.com/Cimpress-MCP/Tiger-Secrets/wiki/How-To-Use-It-(Details)
 
 ## Thank You
 
