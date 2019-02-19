@@ -41,6 +41,16 @@ In the application, the value for the configuration key `Secrets:BaseId` must be
 
 If either is not present, the configuration for that identifier will no-op, having no effect on configuration.
 
+Add the Secrets Manager configuration to the application configuration with the extension method for `IConfiguration`, similar to any other configuration source. For example:
+
+```csharp
+config.AddAWSSecretsManager(hostingContext.HostingEnvironment.EnvironmentName);
+```
+
+This can be added to a reuable host, one like `WebHost.CreateDefaultBuilder<TStartup>()` from ASP.NET Core. Or see if [your favorite hosting library][] already has one configured.
+
+[your favorite hosting library]: https://github.com/Cimpress-MCP/Tiger-Lambda/
+
 In Secrets Manager, the values associated with these identifiers must contain valid JSON strings. This library has no support for `SecretBinary` values. (If the default key/value user interface in the AWS console is used, Secrets Manager stores that as JSON behind the scenes, so it is valid.)
 
 For further details, please consult [the wiki][]. (But don't forget to grant your application the IAM permissions to read these secret values!)
