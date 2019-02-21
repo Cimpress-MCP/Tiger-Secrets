@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using FsCheck;
@@ -36,7 +35,8 @@ namespace Test
             var client = new Mock<IAmazonSecretsManager>();
             client.Setup(m => m.GetSecretValueAsync(It.IsNotNull<GetSecretValueRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync(response);
 
-            var sut = new AWSSecretsManagerConfigurationProvider(new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get));
+            var configurationSource = new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
+            var sut = new AWSSecretsManagerConfigurationProvider(configurationSource);
             sut.Load();
 
             client.Verify(m => m.GetSecretValueAsync(It.Is<GetSecretValueRequest>(r => r.SecretId == secretId.Get), It.IsAny<CancellationToken>()), Times.Once);
@@ -58,7 +58,8 @@ namespace Test
             var client = new Mock<IAmazonSecretsManager>();
             client.Setup(m => m.GetSecretValueAsync(It.IsNotNull<GetSecretValueRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync(response);
 
-            var sut = new AWSSecretsManagerConfigurationProvider(new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get));
+            var configurationSource = new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
+            var sut = new AWSSecretsManagerConfigurationProvider(configurationSource);
             sut.Load();
 
             client.Verify(m => m.GetSecretValueAsync(It.Is<GetSecretValueRequest>(r => r.SecretId == secretId.Get), It.IsAny<CancellationToken>()), Times.Once);
@@ -80,7 +81,8 @@ namespace Test
             var client = new Mock<IAmazonSecretsManager>();
             client.Setup(m => m.GetSecretValueAsync(It.IsNotNull<GetSecretValueRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync(response);
 
-            var sut = new AWSSecretsManagerConfigurationProvider(new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get));
+            var configurationSource = new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
+            var sut = new AWSSecretsManagerConfigurationProvider(configurationSource);
             sut.Load();
 
             var compoundKey = Combine(key.Select(k => k.Get));
@@ -99,7 +101,8 @@ namespace Test
             var client = new Mock<IAmazonSecretsManager>();
             client.Setup(m => m.GetSecretValueAsync(It.IsNotNull<GetSecretValueRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync(response);
 
-            var sut = new AWSSecretsManagerConfigurationProvider(new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get));
+            var configurationSource = new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
+            var sut = new AWSSecretsManagerConfigurationProvider(configurationSource);
             sut.Load();
 
             var compoundKey = Combine(key.Get.Select(k => k.Get));

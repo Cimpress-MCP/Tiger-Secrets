@@ -18,13 +18,14 @@ namespace Test
         public static void NoConfiguredSecret_OK(string message, NonEmptyString secretId)
         {
             var client = new Mock<IAmazonSecretsManager>();
-            client.Setup(m => m.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+            client.Setup(m => m.GetSecretValueAsync(It.IsNotNull<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new ResourceNotFoundException(message));
 
-            var sut = new AWSSecretsManagerConfigurationProvider(new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get));
+            var configurationSource = new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
+            var sut = new AWSSecretsManagerConfigurationProvider(configurationSource);
             sut.Load();
 
-            client.Verify(m => m.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+            client.Verify(m => m.GetSecretValueAsync(It.IsNotNull<GetSecretValueRequest>(), It.IsAny<CancellationToken>()), Times.Once);
             Assert.Empty(sut.GetChildKeys(Enumerable.Empty<string>(), null));
         }
     }

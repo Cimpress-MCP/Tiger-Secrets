@@ -17,12 +17,15 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using JetBrains.Annotations;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using static System.Globalization.CultureInfo;
+using static System.TimeSpan;
 using static Microsoft.Extensions.Configuration.ConfigurationPath;
 
 namespace Microsoft.Extensions.Configuration
@@ -36,6 +39,7 @@ namespace Microsoft.Extensions.Configuration
 
         readonly IAmazonSecretsManager _client;
         readonly string _secretId;
+        readonly ManualResetEvent _reloadTaskEvent = new ManualResetEvent(initialState: true);
 
         /// <summary>Initializes a new instance of the <see cref="AWSSecretsManagerConfigurationProvider"/> class.</summary>
         /// <param name="configurationSource">The source of AWS Secrets Manager configuration.</param>
@@ -46,14 +50,47 @@ namespace Microsoft.Extensions.Configuration
 
             _client = configurationSource.SecretsManagerClient;
             _secretId = configurationSource.SecretId;
+
+            // note(cosborn) Remember that negative means infinite and zero is invalid.
+            if (configurationSource.Expiration > Zero)
+            {
+                ChangeToken.OnChange(
+                    () => new CancellationChangeToken(new CancellationTokenSource(configurationSource.Expiration).Token),
+                    async () =>
+                    {
+                        _reloadTaskEvent.Reset();
+                        try
+                        {
+                            await LoadCoreAsync().ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            _reloadTaskEvent.Set();
+                        }
+                    });
+            }
         }
+
+        /// <summary>
+        /// Blocks the configuration provider until reload of configuration is complete
+        /// if a reload has already begun.
+        /// </summary>
+        /// <remarks><para>
+        /// This method is not for general use; it is exposed so that a Lambda Function can wait
+        /// for the reload to complete before completing the event causing the Lambda compute
+        /// environment to be frozen.
+        /// </para></remarks>
+        /// <param name="timeout">
+        /// A <see cref="TimeSpan"/> representing the maximum time to wait for reload to complete.
+        /// </param>
+        public void WaitForReloadToComplete(TimeSpan timeout) => _reloadTaskEvent.WaitOne(timeout);
 
         /// <inheritdoc/>
         // because(cosborn) Configuration is purely a sync API, and we want good exceptions. Gross, gross, gross.
-        public override void Load() => LoadCore().GetAwaiter().GetResult();
+        public override void Load() => LoadCoreAsync().GetAwaiter().GetResult();
 
         [NotNull]
-        async Task LoadCore()
+        async Task LoadCoreAsync()
         {
             var request = new GetSecretValueRequest
             {
@@ -63,6 +100,7 @@ namespace Microsoft.Extensions.Configuration
             if (response?.SecretString is null) { return; }
 
             Data = NormalizeData(JObject.Parse(response.SecretString));
+            OnReload();
 
             async ValueTask<GetSecretValueResponse> GetSecretValueAsync(GetSecretValueRequest req)
             {
