@@ -31,5 +31,11 @@
   <ItemGroup>
     <ProjectReference Include="..\src\Tiger.Secrets\Tiger.Secrets.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   
 </Project>

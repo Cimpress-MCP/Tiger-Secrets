@@ -14,6 +14,9 @@
 //   limitations under the License.
 // </copyright>
 
+using System;
+using System.Threading;
+
 namespace Microsoft.Extensions.Configuration
 {
     /// <summary>
@@ -30,5 +33,10 @@ namespace Microsoft.Extensions.Configuration
         /// environment.
         /// </para></remarks>
         public string BaseId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the amount of time after which configuration will be reloaded.
+        /// </summary>
+        public TimeSpan Expiration { get; set; } = Timeout.InfiniteTimeSpan;
     }
 }

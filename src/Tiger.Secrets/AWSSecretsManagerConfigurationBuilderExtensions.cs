@@ -45,8 +45,8 @@ namespace Microsoft.Extensions.Configuration
 
             // note(cosborn) It's faster, due to how the JIT works, to do these separately. Yes, I benchmarked it.
             return builder
-                .Add(new AWSSecretsManagerConfigurationSource(secretsManagerClient, secretsOpts.BaseId))
-                .Add(new AWSSecretsManagerConfigurationSource(secretsManagerClient, $"{secretsOpts.BaseId}/{environmentName}"));
+                .Add(new AWSSecretsManagerConfigurationSource(secretsManagerClient, secretsOpts.BaseId, secretsOpts.Expiration))
+                .Add(new AWSSecretsManagerConfigurationSource(secretsManagerClient, $"{secretsOpts.BaseId}/{environmentName}", secretsOpts.Expiration));
         }
     }
 }
