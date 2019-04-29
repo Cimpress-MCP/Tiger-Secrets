@@ -17,6 +17,8 @@
 using System;
 using Amazon.SecretsManager;
 using JetBrains.Annotations;
+using static System.TimeSpan;
+using static Tiger.Secrets.Properties.Resources;
 
 namespace Microsoft.Extensions.Configuration
 {
@@ -27,14 +29,20 @@ namespace Microsoft.Extensions.Configuration
         /// <summary>Initializes a new instance of the <see cref="AWSSecretsManagerConfigurationSource"/> class.</summary>
         /// <param name="secretsManagerClient">The client to use to retrieve secret values.</param>
         /// <param name="secretId">The unique identifer of the secret to use for configuration.</param>
+        /// <param name="expiration">The amount of time after which configuration will be reloaded.</param>
         /// <exception cref="ArgumentNullException"><paramref name="secretsManagerClient"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="secretId"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="expiration"/> is negative.</exception>
         public AWSSecretsManagerConfigurationSource(
             [NotNull] IAmazonSecretsManager secretsManagerClient,
-            [NotNull] string secretId)
+            [NotNull] string secretId,
+            [NotNull] TimeSpan expiration)
         {
+            if (expiration == Zero) { throw new ArgumentOutOfRangeException(nameof(expiration), ExpirationIsInvalid); }
+
             SecretsManagerClient = secretsManagerClient ?? throw new ArgumentNullException(nameof(secretsManagerClient));
             SecretId = secretId ?? throw new ArgumentNullException(nameof(secretId));
+            Expiration = expiration;
         }
 
         /// <summary>Gets the client to use to retrieve secret values.</summary>
@@ -42,6 +50,9 @@ namespace Microsoft.Extensions.Configuration
 
         /// <summary>Gets the unique identifer of the secret to use for configuration.</summary>
         public string SecretId { get; }
+
+        /// <summary>Gets the amount of time after which configuration will be reloaded.</summary>
+        public TimeSpan Expiration { get; }
 
         /// <inheritdoc/>
         IConfigurationProvider IConfigurationSource.Build(IConfigurationBuilder builder) =>
