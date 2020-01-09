@@ -15,6 +15,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Microsoft.Extensions.Configuration
@@ -24,15 +25,8 @@ namespace Microsoft.Extensions.Configuration
     /// </summary>
     public sealed class SecretsOptions
     {
-        /// <summary>Gets or sets the base of the unique identifier of secrets.</summary>
-        /// <remarks><para>
-        /// This will be used as-is to retrieve secrets applicable
-        /// to this application in all environments, and combined
-        /// with the name of the current environment to retrieve
-        /// secrets applicable to this application in the current
-        /// environment.
-        /// </para></remarks>
-        public string BaseId { get; set; }
+        /// <summary>Gets the collection of unique identifiers of the secrets to retrieve.</summary>
+        public List<string> Ids { get; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the amount of time after which configuration will be reloaded.

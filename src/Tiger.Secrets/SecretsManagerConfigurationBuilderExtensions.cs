@@ -1,4 +1,4 @@
-﻿// <copyright file="AWSSecretsManagerConfigurationBuilderExtensions.cs" company="Cimpress, Inc.">
+﻿// <copyright file="SecretsManagerConfigurationBuilderExtensions.cs" company="Cimpress, Inc.">
 //   Copyright 2018 Cimpress, Inc.
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,39 +14,48 @@
 //   limitations under the License.
 // </copyright>
 
+using System.Linq;
 using Amazon.SecretsManager;
 using JetBrains.Annotations;
 
 namespace Microsoft.Extensions.Configuration
 {
     /// <summary>Extends the functionality of <see cref="IConfigurationBuilder"/> for AWS Secrets Manager.</summary>
-    public static class AWSSecretsManagerConfigurationBuilderExtensions
+    public static class SecretsManagerConfigurationBuilderExtensions
     {
         const string SectionName = "Secrets";
 
         /// <summary>Adds AWS Secrets Manager as a configuration source.</summary>
         /// <param name="builder">The configuration builder to which to add.</param>
-        /// <param name="environmentName">The name of the environment in which the application is running.</param>
+        /// <param name="sectionName">
+        /// The name of the configuration section from which to configure the configuration source.
+        /// If no value is provided, a default value of "Secrets" is used.
+        /// </param>
         /// <returns>The modified configuration builder.</returns>
         [NotNull]
-        public static IConfigurationBuilder AddAWSSecretsManager(
+        public static IConfigurationBuilder AddSecretsManager(
             [NotNull] this IConfigurationBuilder builder,
-            [NotNull] string environmentName)
+            string sectionName = SectionName)
         {
-            /* because(coborn)
+            /* because(cosborn)
              * I hate doing this, but:
              * 1. We want to call Build() once and reuse the IAmazonSecretsManager instance if we can. (And we can.)
              * 2. We want the IAmazonSecretsManager instance to have a _hope_ of being configured.
              * There must be something better??? (spoiler: there's not)
              */
             var configuration = builder.AddEnvironmentVariables().Build();
-            var secretsManagerClient = configuration.GetAWSOptions().CreateServiceClient<IAmazonSecretsManager>();
-            var secretsOpts = configuration.GetSection(SectionName).Get<SecretsOptions>();
+            var secretsOpts = configuration.GetSection(sectionName).Get<SecretsOptions>();
 
-            // note(cosborn) It's faster, due to how the JIT works, to do these separately. Yes, I benchmarked it.
-            return builder
-                .Add(new AWSSecretsManagerConfigurationSource(secretsManagerClient, secretsOpts.BaseId, secretsOpts.Expiration))
-                .Add(new AWSSecretsManagerConfigurationSource(secretsManagerClient, $"{secretsOpts.BaseId}/{environmentName}", secretsOpts.Expiration));
+            if (secretsOpts.Ids.Count == 0)
+            {
+                // note(cosborn) Don't pay the cost of creating a service client if we can avoid it.
+                return builder;
+            }
+
+            var secretsManagerClient = configuration.GetAWSOptions().CreateServiceClient<IAmazonSecretsManager>();
+            return secretsOpts.Ids.Aggregate(
+                builder,
+                (acc, curr) => acc.Add(new SecretsManagerConfigurationSource(secretsManagerClient, curr, secretsOpts.Expiration)));
         }
     }
 }
