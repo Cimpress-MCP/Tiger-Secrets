@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using static System.StringComparison;
 using static Microsoft.Extensions.Configuration.ConfigurationPath;
-using static Microsoft.Extensions.Configuration.AWSSecretsManagerConfigurationProvider;
+using static Microsoft.Extensions.Configuration.SecretsManagerConfigurationProvider;
 
 namespace Test
 {

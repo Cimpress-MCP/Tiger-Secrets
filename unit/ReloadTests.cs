@@ -16,8 +16,8 @@ namespace Test
         {
             var client = Mock.Of<IAmazonSecretsManager>();
 
-            var configurationSource = new AWSSecretsManagerConfigurationSource(client, secretId.Get, Timeout.InfiniteTimeSpan);
-            var sut = new AWSSecretsManagerConfigurationProvider(configurationSource);
+            var configurationSource = new SecretsManagerConfigurationSource(client, secretId.Get, Timeout.InfiniteTimeSpan);
+            var sut = new SecretsManagerConfigurationProvider(configurationSource);
 
             // note(cosborn) Assertion controlled by the "longRunningTestSeconds" parameter in `xunit.runner.json`.
             sut.WaitForReloadToComplete(Timeout.InfiniteTimeSpan);

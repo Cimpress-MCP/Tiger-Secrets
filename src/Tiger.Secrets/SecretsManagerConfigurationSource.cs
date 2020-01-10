@@ -1,4 +1,4 @@
-﻿// <copyright file="AWSSecretsManagerConfigurationSource.cs" company="Cimpress, Inc.">
+﻿// <copyright file="SecretsManagerConfigurationSource.cs" company="Cimpress, Inc.">
 //   Copyright 2018 Cimpress, Inc.
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,17 +23,16 @@ using static Tiger.Secrets.Properties.Resources;
 namespace Microsoft.Extensions.Configuration
 {
     /// <summary>A source of AWS Secrets Manager configuration key/values for an application.</summary>
-    public sealed class AWSSecretsManagerConfigurationSource
+    public sealed class SecretsManagerConfigurationSource
         : IConfigurationSource
     {
-        /// <summary>Initializes a new instance of the <see cref="AWSSecretsManagerConfigurationSource"/> class.</summary>
+        /// <summary>Initializes a new instance of the <see cref="SecretsManagerConfigurationSource"/> class.</summary>
         /// <param name="secretsManagerClient">The client to use to retrieve secret values.</param>
-        /// <param name="secretId">The unique identifer of the secret to use for configuration.</param>
+        /// <param name="secretId">The unique identifier of the secret to use for configuration.</param>
         /// <param name="expiration">The amount of time after which configuration will be reloaded.</param>
         /// <exception cref="ArgumentNullException"><paramref name="secretsManagerClient"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="secretId"/> is <see langword="null"/>.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="expiration"/> is negative.</exception>
-        public AWSSecretsManagerConfigurationSource(
+        public SecretsManagerConfigurationSource(
             [NotNull] IAmazonSecretsManager secretsManagerClient,
             [NotNull] string secretId,
             [NotNull] TimeSpan expiration)
@@ -48,7 +47,7 @@ namespace Microsoft.Extensions.Configuration
         /// <summary>Gets the client to use to retrieve secret values.</summary>
         public IAmazonSecretsManager SecretsManagerClient { get; }
 
-        /// <summary>Gets the unique identifer of the secret to use for configuration.</summary>
+        /// <summary>Gets the unique identifier of the secret to use for configuration.</summary>
         public string SecretId { get; }
 
         /// <summary>Gets the amount of time after which configuration will be reloaded.</summary>
@@ -56,6 +55,6 @@ namespace Microsoft.Extensions.Configuration
 
         /// <inheritdoc/>
         IConfigurationProvider IConfigurationSource.Build(IConfigurationBuilder builder) =>
-            new AWSSecretsManagerConfigurationProvider(this);
+            new SecretsManagerConfigurationProvider(this);
     }
 }

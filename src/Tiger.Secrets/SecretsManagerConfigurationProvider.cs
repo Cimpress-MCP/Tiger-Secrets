@@ -1,4 +1,4 @@
-﻿// <copyright file="AWSSecretsManagerConfigurationProvider.cs" company="Cimpress, Inc.">
+﻿// <copyright file="SecretsManagerConfigurationProvider.cs" company="Cimpress, Inc.">
 //   Copyright 2018 Cimpress, Inc.
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,20 +31,20 @@ using static Microsoft.Extensions.Configuration.ConfigurationPath;
 namespace Microsoft.Extensions.Configuration
 {
     /// <summary>Provides AWS Secrets Manager configuration key/values for an application.</summary>
-    public sealed class AWSSecretsManagerConfigurationProvider
+    public sealed class SecretsManagerConfigurationProvider
         : ConfigurationProvider
     {
-        /// <summary>Another delimiter "__" used to separate indiidual keys in a path.</summary>
+        /// <summary>Another delimiter "__" used to separate individual keys in a path.</summary>
         public const string AlternativeKeyDelimiter = "__";
 
         readonly IAmazonSecretsManager _client;
         readonly string _secretId;
         readonly ManualResetEvent _reloadTaskEvent = new ManualResetEvent(initialState: true);
 
-        /// <summary>Initializes a new instance of the <see cref="AWSSecretsManagerConfigurationProvider"/> class.</summary>
+        /// <summary>Initializes a new instance of the <see cref="SecretsManagerConfigurationProvider"/> class.</summary>
         /// <param name="configurationSource">The source of AWS Secrets Manager configuration.</param>
         /// <exception cref="ArgumentNullException"><paramref name="configurationSource"/> is <see langword="null"/>.</exception>
-        public AWSSecretsManagerConfigurationProvider([NotNull] AWSSecretsManagerConfigurationSource configurationSource)
+        public SecretsManagerConfigurationProvider([NotNull] SecretsManagerConfigurationSource configurationSource)
         {
             if (configurationSource is null) { throw new ArgumentNullException(nameof(configurationSource)); }
 
@@ -92,28 +92,15 @@ namespace Microsoft.Extensions.Configuration
         [NotNull]
         async Task LoadCoreAsync()
         {
-            var request = new GetSecretValueRequest
+            var req = new GetSecretValueRequest
             {
                 SecretId = _secretId
             };
-            var response = await GetSecretValueAsync(request).ConfigureAwait(false);
-            if (response?.SecretString is null) { return; }
+            var resp = await _client.GetSecretValueAsync(req).ConfigureAwait(false);
+            if (resp?.SecretString is null) { return; }
 
-            Data = NormalizeData(JObject.Parse(response.SecretString));
+            Data = NormalizeData(JObject.Parse(resp.SecretString));
             OnReload();
-
-            async ValueTask<GetSecretValueResponse> GetSecretValueAsync(GetSecretValueRequest req)
-            {
-                try
-                {
-                    return await _client.GetSecretValueAsync(req).ConfigureAwait(false);
-                }
-                catch (ResourceNotFoundException)
-                {
-                    // note(cosborn) I think we can't guarantee both an environment-specific secret and a generalized one.
-                    return new GetSecretValueResponse();
-                }
-            }
         }
 
         [NotNull]
@@ -195,11 +182,7 @@ namespace Microsoft.Extensions.Configuration
                 data[key] = value.ToString(InvariantCulture);
 
                 // note(cosborn) Colons put into Secrets Manager keys can't always be extracted.
-#if NETSTANDARD
-                string NormalizeKey(string k) => k.Replace(AlternativeKeyDelimiter, KeyDelimiter);
-#else
-                string NormalizeKey(string k) => k.Replace(AlternativeKeyDelimiter, KeyDelimiter, StringComparison.Ordinal);
-#endif
+                static string NormalizeKey(string k) => k.Replace(AlternativeKeyDelimiter, KeyDelimiter, StringComparison.Ordinal);
             }
         }
     }

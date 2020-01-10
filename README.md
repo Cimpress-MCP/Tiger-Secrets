@@ -34,17 +34,12 @@ There are a few ways to allow an application access to secret configuration valu
 
 In short, setup has two parts. One performed in the application (or, better, in CloudFormation), and one performed in Secrets Manager (which may _also_ be performed in CloudFormation).
 
-In the application, the value for the configuration key `Secrets:BaseId` must be set. This will be the base of the identifiers which the library will look for in Secrets Manager. Two identifiers are queried. One is the plain base ID, and the other is the base ID combined with the running environment. Given the base ID "thing-doer" running in the "Production" environment, the following keys will be queried:
-
-- thing-doer
-- thing-doer/Production
-
-If either is not present, the configuration for that identifier will no-op, having no effect on configuration.
+In the application, the index values for the configuration key `Secrets:Ids` must be set. (That is, `Secrets:Ids:0`, `Secrets:Ids:1`, &c.) These are the identifiers which the library will look for in Secrets Manager. If a specified identifier is not present, the configuration will fail.
 
 Add the Secrets Manager configuration to the application configuration with the extension method for `IConfiguration`, similar to any other configuration source. For example:
 
 ```csharp
-config.AddAWSSecretsManager(hostingContext.HostingEnvironment.EnvironmentName);
+config.AddAWSSecretsManager();
 ```
 
 This can be added to a reuable host, one like `WebHost.CreateDefaultBuilder<TStartup>()` from ASP.NET Core. Or see if [your favorite hosting library][] already has one configured.

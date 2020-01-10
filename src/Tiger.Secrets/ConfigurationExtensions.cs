@@ -26,7 +26,7 @@ namespace Tiger.Secrets.Lambda
     public static class ConfigurationExtensions
     {
         /// <summary>
-        /// Blocks execution of a Lambda Function until any instances of <see cref="AWSSecretsManagerConfigurationProvider"/>
+        /// Blocks execution of a Lambda Function until any instances of <see cref="SecretsManagerConfigurationProvider"/>
         /// added to the configuration have completed a reload of configuration from Secrets Manager if such a reload
         /// is in progress when this method is invoked.
         /// </summary>
@@ -39,7 +39,7 @@ namespace Tiger.Secrets.Lambda
 
             if (!(configuration is IConfigurationRoot configurationRoot)) { return; }
 
-            foreach (var provider in configurationRoot.Providers.OfType<AWSSecretsManagerConfigurationProvider>())
+            foreach (var provider in configurationRoot.Providers.OfType<SecretsManagerConfigurationProvider>())
             {
                 provider.WaitForReloadToComplete(timeout);
             }
