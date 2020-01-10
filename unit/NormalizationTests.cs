@@ -12,7 +12,7 @@ using Microsoft.Extensions.Configuration.Test;
 using Moq;
 using Newtonsoft.Json;
 using Xunit;
-using static Microsoft.Extensions.Configuration.AWSSecretsManagerConfigurationProvider;
+using static Microsoft.Extensions.Configuration.SecretsManagerConfigurationProvider;
 using static Microsoft.Extensions.Configuration.ConfigurationPath;
 
 namespace Test
@@ -35,8 +35,8 @@ namespace Test
             var client = new Mock<IAmazonSecretsManager>();
             client.Setup(m => m.GetSecretValueAsync(It.IsNotNull<GetSecretValueRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync(response);
 
-            var configurationSource = new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
-            var sut = new AWSSecretsManagerConfigurationProvider(configurationSource);
+            var configurationSource = new SecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
+            var sut = new SecretsManagerConfigurationProvider(configurationSource);
             sut.Load();
 
             client.Verify(m => m.GetSecretValueAsync(It.Is<GetSecretValueRequest>(r => r.SecretId == secretId.Get), It.IsAny<CancellationToken>()), Times.Once);
@@ -58,8 +58,8 @@ namespace Test
             var client = new Mock<IAmazonSecretsManager>();
             client.Setup(m => m.GetSecretValueAsync(It.IsNotNull<GetSecretValueRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync(response);
 
-            var configurationSource = new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
-            var sut = new AWSSecretsManagerConfigurationProvider(configurationSource);
+            var configurationSource = new SecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
+            var sut = new SecretsManagerConfigurationProvider(configurationSource);
             sut.Load();
 
             client.Verify(m => m.GetSecretValueAsync(It.Is<GetSecretValueRequest>(r => r.SecretId == secretId.Get), It.IsAny<CancellationToken>()), Times.Once);
@@ -81,8 +81,8 @@ namespace Test
             var client = new Mock<IAmazonSecretsManager>();
             client.Setup(m => m.GetSecretValueAsync(It.IsNotNull<GetSecretValueRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync(response);
 
-            var configurationSource = new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
-            var sut = new AWSSecretsManagerConfigurationProvider(configurationSource);
+            var configurationSource = new SecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
+            var sut = new SecretsManagerConfigurationProvider(configurationSource);
             sut.Load();
 
             var compoundKey = Combine(key.Select(k => k.Get));
@@ -101,15 +101,15 @@ namespace Test
             var client = new Mock<IAmazonSecretsManager>();
             client.Setup(m => m.GetSecretValueAsync(It.IsNotNull<GetSecretValueRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync(response);
 
-            var configurationSource = new AWSSecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
-            var sut = new AWSSecretsManagerConfigurationProvider(configurationSource);
+            var configurationSource = new SecretsManagerConfigurationSource(client.Object, secretId.Get, Timeout.InfiniteTimeSpan);
+            var sut = new SecretsManagerConfigurationProvider(configurationSource);
             sut.Load();
 
             var compoundKey = Combine(key.Get.Select(k => k.Get));
             client.Verify(m => m.GetSecretValueAsync(It.Is<GetSecretValueRequest>(r => r.SecretId == secretId.Get), It.IsAny<CancellationToken>()), Times.Once);
             Assert.Equal(value.Get, sut.Get(compoundKey));
 
-            ImmutableDictionary<string, object> GenerateDatum(in ReadOnlySpan<ConfigurationKey> k, string v)
+            static ImmutableDictionary<string, object> GenerateDatum(in ReadOnlySpan<ConfigurationKey> k, string v)
             {
                 var (head, tail) = k;
 
