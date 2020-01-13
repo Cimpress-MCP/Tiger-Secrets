@@ -46,7 +46,7 @@ namespace Microsoft.Extensions.Configuration
             var configuration = builder.AddEnvironmentVariables().Build();
             var secretsOpts = configuration.GetSection(sectionName).Get<SecretsOptions>();
 
-            if (secretsOpts.Ids.Count == 0)
+            if (secretsOpts is null || secretsOpts.Ids.Count == 0)
             {
                 // note(cosborn) Don't pay the cost of creating a service client if we can avoid it.
                 return builder;
