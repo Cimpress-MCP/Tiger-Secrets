@@ -1,4 +1,8 @@
-﻿### What's new in 2.0.0 (Released 2019-11-05)
+﻿### What's new in 2.0.1 (Released 2020-01-13)
+
+* Misconfigured options are now handled by bailing out gracefully.
+
+### What's new in 2.0.0 (Released 2019-11-05)
 
 * The IDs which the library will check are no longer configured by convention.
 * The configuration now accepts a collection of secret IDs (probably ARNs) from which to read.
