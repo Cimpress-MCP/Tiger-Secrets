@@ -1,7 +1,7 @@
 ﻿// <copyright file="SecretsManagerConfigurationProvider.cs" company="Cimpress, Inc.">
-//   Copyright 2018 Cimpress, Inc.
+//   Copyright 2020 Cimpress, Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
+//   Licensed under the Apache License, Version 2.0 (the "License") –
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -21,7 +21,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
-using JetBrains.Annotations;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using static System.Globalization.CultureInfo;
@@ -32,7 +31,7 @@ namespace Microsoft.Extensions.Configuration
 {
     /// <summary>Provides AWS Secrets Manager configuration key/values for an application.</summary>
     public sealed class SecretsManagerConfigurationProvider
-        : ConfigurationProvider
+        : ConfigurationProvider, IDisposable
     {
         /// <summary>Another delimiter "__" used to separate individual keys in a path.</summary>
         public const string AlternativeKeyDelimiter = "__";
@@ -44,7 +43,7 @@ namespace Microsoft.Extensions.Configuration
         /// <summary>Initializes a new instance of the <see cref="SecretsManagerConfigurationProvider"/> class.</summary>
         /// <param name="configurationSource">The source of AWS Secrets Manager configuration.</param>
         /// <exception cref="ArgumentNullException"><paramref name="configurationSource"/> is <see langword="null"/>.</exception>
-        public SecretsManagerConfigurationProvider([NotNull] SecretsManagerConfigurationSource configurationSource)
+        public SecretsManagerConfigurationProvider(SecretsManagerConfigurationSource configurationSource)
         {
             if (configurationSource is null) { throw new ArgumentNullException(nameof(configurationSource)); }
 
@@ -54,18 +53,18 @@ namespace Microsoft.Extensions.Configuration
             // note(cosborn) Remember that negative means infinite and zero is invalid.
             if (configurationSource.Expiration > Zero)
             {
-                ChangeToken.OnChange(
+                _ = ChangeToken.OnChange(
                     () => new CancellationChangeToken(new CancellationTokenSource(configurationSource.Expiration).Token),
                     async () =>
                     {
-                        _reloadTaskEvent.Reset();
+                        _ = _reloadTaskEvent.Reset();
                         try
                         {
                             await LoadCoreAsync().ConfigureAwait(false);
                         }
                         finally
                         {
-                            _reloadTaskEvent.Set();
+                            _ = _reloadTaskEvent.Set();
                         }
                     });
             }
@@ -89,7 +88,6 @@ namespace Microsoft.Extensions.Configuration
         // because(cosborn) Configuration is purely a sync API, and we want good exceptions. Gross, gross, gross.
         public override void Load() => LoadCoreAsync().GetAwaiter().GetResult();
 
-        [NotNull]
         async Task LoadCoreAsync()
         {
             var req = new GetSecretValueRequest
@@ -103,8 +101,7 @@ namespace Microsoft.Extensions.Configuration
             OnReload();
         }
 
-        [NotNull]
-        IDictionary<string, string> NormalizeData([NotNull] JObject rawData)
+        static IDictionary<string, string> NormalizeData(JObject rawData)
         {
             /* note(cosborn)
              * "Normalize" the data? But it's already in proper JSON form. Why?
@@ -126,26 +123,18 @@ namespace Microsoft.Extensions.Configuration
              */
 
             var data = new Dictionary<string, string>();
-            /* because(cosborn)
-             * This semi-functional, semi-imperative setup may look odd,
-             * but it's much faster than the purely functional implementation
-             * -- in which data is an immutable dictionary, passed around --
-             * and it's faster than the purely imperative implementation
-             * -- in which context is mutable and lives outside with data.
-             * YES I BENCHMARKED IT
-             */
-            VisitObject(rawData, ImmutableArray<string>.Empty);
+            VisitObject(rawData, ImmutableArray<string>.Empty, data);
             return data;
 
-            void VisitObject(JObject @object, ImmutableArray<string> context)
+            static void VisitObject(JObject @object, ImmutableArray<string> context, IDictionary<string, string> data)
             {
                 foreach (var property in @object.Properties())
                 {
-                    VisitToken(property.Value, context.Add(property.Name));
+                    VisitToken(property.Value, context.Add(property.Name), data);
                 }
             }
 
-            void VisitArray(JArray array, ImmutableArray<string> context)
+            static void VisitArray(JArray array, ImmutableArray<string> context, IDictionary<string, string> data)
             {
                 for (var i = 0; i < array.Count; i++)
                 {
@@ -153,28 +142,28 @@ namespace Microsoft.Extensions.Configuration
                      * Remember, configuration considers arrays to be objects with "numeric" indices.
                      * That's why they merge how they do in AppSettings.
                      */
-                    VisitToken(array[i], context.Add(i.ToString(InvariantCulture)));
+                    VisitToken(array[i], context.Add(i.ToString(InvariantCulture)), data);
                 }
             }
 
-            void VisitToken(JToken token, ImmutableArray<string> context)
+            static void VisitToken(JToken token, ImmutableArray<string> context, IDictionary<string, string> data)
             {
                 switch (token.Type)
                 {
                     case JTokenType.Object:
-                        VisitObject((JObject)token, context);
+                        VisitObject((JObject)token, context, data);
                         break;
                     case JTokenType.Array:
-                        VisitArray((JArray)token, context);
+                        VisitArray((JArray)token, context, data);
                         break;
                     default:
                         // note(cosborn) ¯\_(ツ)_/¯
-                        VisitValue((JValue)token, context);
+                        VisitValue((JValue)token, context, data);
                         break;
                 }
             }
 
-            void VisitValue(JValue value, ImmutableArray<string> context)
+            static void VisitValue(JValue value, ImmutableArray<string> context, IDictionary<string, string> data)
             {
                 var key = NormalizeKey(Combine(context));
 
@@ -184,6 +173,13 @@ namespace Microsoft.Extensions.Configuration
                 // note(cosborn) Colons put into Secrets Manager keys can't always be extracted.
                 static string NormalizeKey(string k) => k.Replace(AlternativeKeyDelimiter, KeyDelimiter, StringComparison.Ordinal);
             }
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            _client.Dispose();
+            _reloadTaskEvent.Dispose();
         }
     }
 }
