@@ -1,7 +1,7 @@
 ﻿// <copyright file="SecretsManagerConfigurationSource.cs" company="Cimpress, Inc.">
-//   Copyright 2018 Cimpress, Inc.
+//   Copyright 2020 Cimpress, Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
+//   Licensed under the Apache License, Version 2.0 (the "License") –
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -16,7 +16,6 @@
 
 using System;
 using Amazon.SecretsManager;
-using JetBrains.Annotations;
 using static System.TimeSpan;
 using static Tiger.Secrets.Properties.Resources;
 
@@ -33,9 +32,9 @@ namespace Microsoft.Extensions.Configuration
         /// <exception cref="ArgumentNullException"><paramref name="secretsManagerClient"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="secretId"/> is <see langword="null"/>.</exception>
         public SecretsManagerConfigurationSource(
-            [NotNull] IAmazonSecretsManager secretsManagerClient,
-            [NotNull] string secretId,
-            [NotNull] TimeSpan expiration)
+            IAmazonSecretsManager secretsManagerClient,
+            string secretId,
+            TimeSpan expiration)
         {
             if (expiration == Zero) { throw new ArgumentOutOfRangeException(nameof(expiration), ExpirationIsInvalid); }
 

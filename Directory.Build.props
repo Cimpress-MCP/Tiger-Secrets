@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <DebugType>portable</DebugType>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Features>strict</Features>
+  </PropertyGroup>
+</Project>

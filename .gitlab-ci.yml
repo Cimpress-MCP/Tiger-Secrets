@@ -8,27 +8,32 @@ stages:
 variables:
   CONFIGURATION: Release
 
-cache:
-  key: "$CI_PIPELINE_ID"
-
 build:
   stage: build
   script:
   - dotnet build
-  artifacts:
-    untracked: true
+  cache: &cache_template
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+    - ./src/*/bin/*
+    policy: push
 
 test:
   stage: test-pack
   script:
   - dotnet test
+  cache:
+    <<: *cache_template
+    policy: pull
 
 pack:
   stage: test-pack
   script:
   - dotnet pack --output "$(pwd)/dist/"
+  cache:
+    <<: *cache_template
+    policy: pull
   artifacts:
-    untracked: false
     paths:
     - ./dist/
 
@@ -37,4 +42,4 @@ deploy:
   script:
   - dotnet nuget push --api-key "${NUGET_API_KEY}" ./dist/*.nupkg
   only:
-  - master
+  - main
