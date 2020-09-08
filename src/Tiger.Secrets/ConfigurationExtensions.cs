@@ -1,7 +1,7 @@
 ﻿// <copyright file="ConfigurationExtensions.cs" company="Cimpress, Inc.">
-//   Copyright 2018 Cimpress, Inc.
+//   Copyright 2020 Cimpress, Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
+//   Licensed under the Apache License, Version 2.0 (the "License") –
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -15,8 +15,8 @@
 // </copyright>
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 
 // note(cosborn) Hidden in plain sight to avoid casual misuse of this extension method.
@@ -33,10 +33,10 @@ namespace Tiger.Secrets.Lambda
         /// <param name="configuration">The configuration containing the providers for which to wait.</param>
         /// <param name="timeout">The amout of time after which to give up on waiting for a reload to complete.</param>
         /// <exception cref="ArgumentNullException"><paramref name="configuration"/> is <see langword="null"/>.</exception>
-        public static void WaitForSecretsManagerReloadToComplete([NotNull] this IConfiguration configuration, TimeSpan timeout)
+        [SuppressMessage("Microsoft.Style", "IDE0083", Justification = "Compiler verison is still in preview.")]
+        public static void WaitForSecretsManagerReloadToComplete(this IConfiguration configuration, TimeSpan timeout)
         {
             if (configuration is null) { throw new ArgumentNullException(nameof(configuration)); }
-
             if (!(configuration is IConfigurationRoot configurationRoot)) { return; }
 
             foreach (var provider in configurationRoot.Providers.OfType<SecretsManagerConfigurationProvider>())

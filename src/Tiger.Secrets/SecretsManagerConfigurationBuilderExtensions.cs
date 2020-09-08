@@ -1,7 +1,7 @@
 ﻿// <copyright file="SecretsManagerConfigurationBuilderExtensions.cs" company="Cimpress, Inc.">
-//   Copyright 2018 Cimpress, Inc.
+//   Copyright 2020 Cimpress, Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
+//   Licensed under the Apache License, Version 2.0 (the "License") –
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -16,15 +16,14 @@
 
 using System.Linq;
 using Amazon.SecretsManager;
-using JetBrains.Annotations;
+using Tiger.Secrets;
+using static Tiger.Secrets.SecretsOptions;
 
 namespace Microsoft.Extensions.Configuration
 {
     /// <summary>Extends the functionality of <see cref="IConfigurationBuilder"/> for AWS Secrets Manager.</summary>
     public static class SecretsManagerConfigurationBuilderExtensions
     {
-        const string SectionName = "Secrets";
-
         /// <summary>Adds AWS Secrets Manager as a configuration source.</summary>
         /// <param name="builder">The configuration builder to which to add.</param>
         /// <param name="sectionName">
@@ -32,10 +31,9 @@ namespace Microsoft.Extensions.Configuration
         /// If no value is provided, a default value of "Secrets" is used.
         /// </param>
         /// <returns>The modified configuration builder.</returns>
-        [NotNull]
         public static IConfigurationBuilder AddSecretsManager(
-            [NotNull] this IConfigurationBuilder builder,
-            string sectionName = SectionName)
+            this IConfigurationBuilder builder,
+            string sectionName = Secrets)
         {
             /* because(cosborn)
              * I hate doing this, but:
@@ -44,7 +42,7 @@ namespace Microsoft.Extensions.Configuration
              * There must be something better??? (spoiler: there's not)
              */
             var configuration = builder.AddEnvironmentVariables().Build();
-            var secretsOpts = configuration.GetSection(sectionName).Get<SecretsOptions>();
+            var secretsOpts = configuration.GetSection(sectionName).Get<SecretsOptions>(o => o.BindNonPublicProperties = true);
 
             if (secretsOpts is null || secretsOpts.Ids.Count == 0)
             {

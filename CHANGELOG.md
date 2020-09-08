@@ -1,4 +1,9 @@
-﻿### What's new in 2.0.1 (Released 2020-01-13)
+﻿### What's new in 2.1.0 (Released 2020-09-08)
+
+* The library has begun tracking the AWS SDK 3.5 line.
+* The library has been configured for nullability.
+
+### What's new in 2.0.1 (Released 2020-01-13)
 
 * Misconfigured options are now handled by bailing out gracefully.
 
