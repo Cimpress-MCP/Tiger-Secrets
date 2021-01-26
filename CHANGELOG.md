@@ -1,4 +1,11 @@
-﻿### What's new in 2.1.0 (Released 2020-09-08)
+﻿### What's new in 2.1.1 (Released 2021-01-26)
+
+* The library's compatibility has been greatly widened.
+* The library has lowered its AWS SDK API requirements.
+* The library has grown support for .NET 5.0.
+* A potential deadlock has been corrected.
+
+### What's new in 2.1.0 (Released 2020-09-08)
 
 * The library has begun tracking the AWS SDK 3.5 line.
 * The library has been configured for nullability.

@@ -36,8 +36,15 @@ namespace Tiger.Secrets.Lambda
         [SuppressMessage("Microsoft.Style", "IDE0083", Justification = "Compiler verison is still in preview.")]
         public static void WaitForSecretsManagerReloadToComplete(this IConfiguration configuration, TimeSpan timeout)
         {
-            if (configuration is null) { throw new ArgumentNullException(nameof(configuration)); }
-            if (!(configuration is IConfigurationRoot configurationRoot)) { return; }
+            if (configuration is null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+
+            if (configuration is not IConfigurationRoot configurationRoot)
+            {
+                return;
+            }
 
             foreach (var provider in configurationRoot.Providers.OfType<SecretsManagerConfigurationProvider>())
             {
