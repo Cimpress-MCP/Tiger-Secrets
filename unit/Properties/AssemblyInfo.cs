@@ -1,4 +1,4 @@
-﻿// <copyright file="SpanExtensions.cs" company="Cimpress, Inc.">
+// <copyright file="AssemblyInfo.cs" company="Cimpress, Inc.">
 //   Copyright 2020 Cimpress, Inc.
 //
 //   Licensed under the Apache License, Version 2.0 (the "License") –
@@ -16,19 +16,4 @@
 
 using System;
 
-namespace Test
-{
-    public static class SpanExtensions
-    {
-        public static void Deconstruct<TElement>(this in ReadOnlySpan<TElement> readOnlySpan, out TElement head, out ReadOnlySpan<TElement> tail)
-        {
-            if (readOnlySpan.Length == 0)
-            {
-                throw new ArgumentException("Empty collection cannot be deconstructed.", nameof(readOnlySpan));
-            }
-
-            head = readOnlySpan[0];
-            tail = readOnlySpan[1..];
-        }
-    }
-}
+[assembly: CLSCompliant(false)]

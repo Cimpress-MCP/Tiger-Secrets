@@ -27,13 +27,13 @@ namespace Tiger.Secrets
     public sealed class SecretsOptions
     {
         /// <summary>The default name of the configuration section.</summary>
-        public const string Secrets = "Secrets";
+        public const string Secrets = nameof(Secrets);
 
         /// <summary>Gets the collection of unique identifiers of the secrets to retrieve.</summary>
-        public List<string> Ids { get; } = new List<string>();
+        public IList<string> Ids { get; } = new List<string>();
 
         /// <summary>
-        /// Gets or sets the amount of time after which configuration will be reloaded.
+        /// Gets the amount of time after which configuration will be reloaded.
         /// </summary>
         [SuppressMessage("Roslynator.Style", "RCS1170", Justification = "Configuration can bind to private setters.")]
         public TimeSpan Expiration { get; private set; } = Timeout.InfiniteTimeSpan;

@@ -36,7 +36,10 @@ namespace Microsoft.Extensions.Configuration
             string secretId,
             TimeSpan expiration)
         {
-            if (expiration == Zero) { throw new ArgumentOutOfRangeException(nameof(expiration), ExpirationIsInvalid); }
+            if (expiration == Zero)
+            {
+                throw new ArgumentOutOfRangeException(nameof(expiration), ExpirationIsInvalid);
+            }
 
             SecretsManagerClient = secretsManagerClient ?? throw new ArgumentNullException(nameof(secretsManagerClient));
             SecretId = secretId ?? throw new ArgumentNullException(nameof(secretId));
