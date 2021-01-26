@@ -38,14 +38,17 @@ namespace Microsoft.Extensions.Configuration
 
         readonly IAmazonSecretsManager _client;
         readonly string _secretId;
-        readonly ManualResetEvent _reloadTaskEvent = new ManualResetEvent(initialState: true);
+        readonly ManualResetEvent _reloadTaskEvent = new(initialState: true);
 
         /// <summary>Initializes a new instance of the <see cref="SecretsManagerConfigurationProvider"/> class.</summary>
         /// <param name="configurationSource">The source of AWS Secrets Manager configuration.</param>
         /// <exception cref="ArgumentNullException"><paramref name="configurationSource"/> is <see langword="null"/>.</exception>
         public SecretsManagerConfigurationProvider(SecretsManagerConfigurationSource configurationSource)
         {
-            if (configurationSource is null) { throw new ArgumentNullException(nameof(configurationSource)); }
+            if (configurationSource is null)
+            {
+                throw new ArgumentNullException(nameof(configurationSource));
+            }
 
             _client = configurationSource.SecretsManagerClient;
             _secretId = configurationSource.SecretId;
@@ -86,19 +89,13 @@ namespace Microsoft.Extensions.Configuration
 
         /// <inheritdoc/>
         // because(cosborn) Configuration is purely a sync API, and we want good exceptions. Gross, gross, gross.
-        public override void Load() => LoadCoreAsync().GetAwaiter().GetResult();
+        public override void Load() => Task.Run(LoadCoreAsync).GetAwaiter().GetResult();
 
-        async Task LoadCoreAsync()
+        /// <inheritdoc/>
+        public void Dispose()
         {
-            var req = new GetSecretValueRequest
-            {
-                SecretId = _secretId
-            };
-            var resp = await _client.GetSecretValueAsync(req).ConfigureAwait(false);
-            if (resp?.SecretString is null) { return; }
-
-            Data = NormalizeData(JObject.Parse(resp.SecretString));
-            OnReload();
+            _client.Dispose();
+            _reloadTaskEvent.Dispose();
         }
 
         static IDictionary<string, string> NormalizeData(JObject rawData)
@@ -175,11 +172,20 @@ namespace Microsoft.Extensions.Configuration
             }
         }
 
-        /// <inheritdoc/>
-        public void Dispose()
+        async Task LoadCoreAsync()
         {
-            _client.Dispose();
-            _reloadTaskEvent.Dispose();
+            var req = new GetSecretValueRequest
+            {
+                SecretId = _secretId,
+            };
+            var resp = await _client.GetSecretValueAsync(req).ConfigureAwait(false);
+            if (resp?.SecretString is null)
+            {
+                return;
+            }
+
+            Data = NormalizeData(JObject.Parse(resp.SecretString));
+            OnReload();
         }
     }
 }

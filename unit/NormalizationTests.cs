@@ -28,8 +28,8 @@ using Microsoft.Extensions.Configuration.Test;
 using Moq;
 using Newtonsoft.Json;
 using Xunit;
-using static Microsoft.Extensions.Configuration.SecretsManagerConfigurationProvider;
 using static Microsoft.Extensions.Configuration.ConfigurationPath;
+using static Microsoft.Extensions.Configuration.SecretsManagerConfigurationProvider;
 
 namespace Test
 {
@@ -42,11 +42,11 @@ namespace Test
         {
             var datum = new Dictionary<string, object>
             {
-                [key.Get] = value.Get
+                [key.Get] = value.Get,
             };
             var response = new GetSecretValueResponse
             {
-                SecretString = JsonConvert.SerializeObject(datum)
+                SecretString = JsonConvert.SerializeObject(datum),
             };
             var client = new Mock<IAmazonSecretsManager>();
             _ = client
@@ -67,11 +67,11 @@ namespace Test
             var compoundKey = Combine(key.Select(k => k.Get));
             var datum = new Dictionary<string, object>
             {
-                [compoundKey] = value.Get
+                [compoundKey] = value.Get,
             };
             var response = new GetSecretValueResponse
             {
-                SecretString = JsonConvert.SerializeObject(datum)
+                SecretString = JsonConvert.SerializeObject(datum),
             };
             var client = new Mock<IAmazonSecretsManager>();
             _ = client
@@ -92,11 +92,11 @@ namespace Test
             var alternativelyCompoundKey = string.Join(AlternativeKeyDelimiter, key);
             var datum = new Dictionary<string, object>
             {
-                [alternativelyCompoundKey] = value.Get
+                [alternativelyCompoundKey] = value.Get,
             };
             var response = new GetSecretValueResponse
             {
-                SecretString = JsonConvert.SerializeObject(datum)
+                SecretString = JsonConvert.SerializeObject(datum),
             };
             var client = new Mock<IAmazonSecretsManager>();
             _ = client
@@ -118,7 +118,7 @@ namespace Test
             var datum = GenerateDatum(key.Get, value.Get);
             var response = new GetSecretValueResponse
             {
-                SecretString = JsonConvert.SerializeObject(datum)
+                SecretString = JsonConvert.SerializeObject(datum),
             };
             var client = new Mock<IAmazonSecretsManager>();
             _ = client
@@ -138,8 +138,8 @@ namespace Test
                 var (head, tail) = k;
 
                 var pair = tail.Length == 0
-                    ? KeyValuePair.Create<string, object>(head, v)
-                    : KeyValuePair.Create<string, object>(head, GenerateDatum(tail, v));
+                    ? KeyValuePair.Create<string, object>(head.Get, v)
+                    : KeyValuePair.Create<string, object>(head.Get, GenerateDatum(tail, v));
 
                 return ImmutableDictionary.CreateRange(new[] { pair });
             }
